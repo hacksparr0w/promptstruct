@@ -3,29 +3,13 @@ from typing import Any
 from ._llm import LanguageModel, PromptStrategy
 
 
-class JsonPromptError(Exception):
-    pass
-
-
 def _prompt_json_primitive(
         llm: LanguageModel,
         strategy: PromptStrategy,
         type: str,
         prompt: str
 ) -> Any:
-    result = strategy.prompt(llm, prompt, type).content
-
-    match type:
-        case "string":
-            return result
-        case "number":
-            return float(result)
-        case "integer":
-            return int(result)
-        case "boolean":
-            return bool(result)
-        case _:
-            raise ValueError
+    return strategy.prompt(llm, prompt, type)
 
 
 def _prompt_json_object(
