@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "promptstruct"
+version = "0.1.0"
+description = "Get structured output from LLMs"
+authors = ["hacksparr0w <hacksparr0w@protonmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
