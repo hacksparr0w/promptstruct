@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum, auto
 
-from typing import Any, Iterable
+from typing import Iterable
 
 
 class MessageRole(Enum):
@@ -38,9 +38,4 @@ class Message:
 
 class LanguageModel:
     def prompt(messages: Iterable[Message]) -> Message:
-        raise NotImplementedError
-
-
-class PromptStrategy:
-    def prompt(llm: LanguageModel, prompt: str, *args, **kwargs) -> Any:
         raise NotImplementedError
