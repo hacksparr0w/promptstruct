@@ -4,22 +4,22 @@ from ._llm import LanguageModel, Message
 
 
 class PromptBuilder:
-    def build_prompt(schema: dict) -> str:
+    def build_prompt(self, schema: dict) -> str:
         raise NotImplementedError
 
 
 class ResponseParser:
-    def parse_response(response: Message, schema: dict) -> Any:
+    def parse_response(self, response: Message, schema: dict) -> Any:
         raise NotImplementedError
 
 
 class DefaultPromptBuilder(PromptBuilder):
-    def build_prompt(schema: dict) -> Iterable[Message]:
+    def build_prompt(self, schema: dict) -> Iterable[Message]:
         return [Message.user(schema["prompt"])]
 
 
 class DefaultResponseParser(ResponseParser):
-    def parse_response(response: Message, schema: dict) -> Any:
+    def parse_response(self, response: Message, schema: dict) -> Any:
         content = response.content
         type = schema["type"]
 
