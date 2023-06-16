@@ -1,7 +1,20 @@
 from dataclasses import dataclass
 from enum import Enum, auto
 
-from typing import Iterable
+from typing import Iterable, Optional, Union
+
+
+@dataclass
+class Function:
+    name: str
+    description: str
+    parameters: dict
+
+
+@dataclass
+class FunctionCall:
+    name: str
+    arguments: dict
 
 
 class MessageRole(Enum):
@@ -15,27 +28,57 @@ class MessageRole(Enum):
             if role.name == name:
                 return role
 
-        raise ValueError
+        raise ValueError(f"Invalid message role: '{name}'")
 
 
 @dataclass
-class Message:
-    role: MessageRole
+class AssistantMessage:
+    content: Optional[str]
+    function_call: Optional[FunctionCall]
+    role: MessageRole = MessageRole.ASSISTANT
+
+
+@dataclass
+class SystemMessage:
     content: str
+    role: MessageRole = MessageRole.SYSTEM
 
-    @classmethod
-    def assistant(cls, content: str) -> "Message":
-        return cls(MessageRole.ASSISTANT, content)
 
-    @classmethod
-    def system(cls, content: str) -> "Message":
-        return cls(MessageRole.SYSTEM, content)
+@dataclass
+class UserMessage:
+    content: str
+    role: MessageRole = MessageRole.USER
 
-    @classmethod
-    def user(cls, content: str) -> "Message":
-        return cls(MessageRole.USER, content)
+
+Message = Union[AssistantMessage, SystemMessage, UserMessage]
+
+
+def _build_assistant_message(
+    content: Optional[str],
+    function_call: Optional[FunctionCall] = None,
+) -> AssistantMessage:
+    return AssistantMessage(content, function_call)
+
+
+def _build_system_message(content: str) -> SystemMessage:
+    return SystemMessage(content)
+
+
+def _build_user_message(content: str) -> UserMessage:
+    return UserMessage(content)
+
+
+Message.__dict__["assistant"] = _build_assistant_message
+Message.__dict__["system"] = _build_system_message
+Message.__dict__["user"] = _build_user_message
 
 
 class LanguageModel:
-    def prompt(messages: Iterable[Message]) -> Message:
+    def supports_functions(self) -> bool:
+        raise NotImplementedError
+
+    def prompt(
+        messages: Iterable[Message],
+        functions: Optional[Iterable[Function]] = None
+    ) -> AssistantMessage:
         raise NotImplementedError
