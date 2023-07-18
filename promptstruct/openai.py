@@ -78,7 +78,7 @@ class OpenAiLanguageModel(LanguageModel):
     def supports_functions(self) -> bool:
         return self._model_name in ("gpt-4-0613", "gpt-3.5-turbo-0613")
 
-    def prompt(
+    async def prompt(
         self,
         messages: Iterable[Message],
         functions: Optional[Iterable[Function]] = None
@@ -92,7 +92,7 @@ class OpenAiLanguageModel(LanguageModel):
         if functions is not None:
             kwargs["functions"] = [asdict(function) for function in functions]
 
-        response = openai.ChatCompletion.create(**kwargs)
+        response = await openai.ChatCompletion.acreate(**kwargs)
 
         message_data = response["choices"][0]["message"]
         message = _deserialize_message(message_data)

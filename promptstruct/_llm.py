@@ -77,7 +77,7 @@ class LanguageModel:
     def supports_functions(self) -> bool:
         raise NotImplementedError
 
-    def prompt(
+    async def prompt(
         messages: Iterable[Message],
         functions: Optional[Iterable[Function]] = None
     ) -> AssistantMessage:
