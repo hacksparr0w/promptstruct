@@ -9,13 +9,18 @@ from ._llm import (
     UserMessage
 )
 
+from ._memory import LanguageModelWithMemory, with_memory
+
 __all__ = [
     "AssistantMessage",
     "Function",
     "FunctionCall",
     "LanguageModel",
+    "LanguageModelWithMemory",
     "Message",
     "MessageRole",
     "SystemMessage",
-    "UserMessage"
+    "UserMessage",
+
+    "with_memory"
 ]
