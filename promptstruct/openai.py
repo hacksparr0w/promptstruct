@@ -1,100 +1,63 @@
-import json
+from textwrap import dedent
 
-from dataclasses import asdict
-from typing import Iterable, Optional
+from openai import AsyncOpenAI
 
-import openai
+from ._json import Schema
 
-from ._llm import (
-    AssistantMessage,
-    Function,
-    FunctionCall,
-    LanguageModel,
-    Message,
-    MessageRole
+
+__all__ = (
+    "default_complete",
 )
 
 
-__all__ = [
-    "OpenAiLanguageModel"
-]
+async def default_complete(
+    schema: Schema,
+    client: AsyncOpenAI
+) -> str:
+    type = schema["type"]
+    description = schema["description"]
 
+    completion = await client.chat.completions.create(
+        messages=[
+            {
+                "role": "system",
+                "content": dedent(
+                    """
+                    You are a large language model tasked with generating a
+                    JSON-compatible values by answering user's prompt.
+                    Only respond with the value that best answers the user's
+                    prompt, do not include any other information.
 
-def _serialize_function_call(function_call: FunctionCall) -> dict:
-    return {
-        "name": function_call.name,
-        "arguments": json.dumps(function_call.arguments)
-    }
+                    Following are some examples of inputs and outputs you
+                    should try to replicate.
 
+                    Prompt: The capital of the United States
+                    Type: string
+                    Answer: "Washington, D.C."
 
-def _serialize_message(message: Message) -> dict:
-    role = message.role.name.lower()
-    data = {"role": role, "content": message.content}
+                    Prompt: Answer to the Ultimate Question of Life
+                    Type: integer
+                    Answer: 42
 
-    if (
-        message.role is MessageRole.ASSISTANT and
-        message.function_call is not None
-    ):
-        data["function_call"] = _serialize_function_call(
-            message.function_call
-        )
-
-    return data
-
-
-def _deserialize_function_call(data: dict) -> FunctionCall:
-    name = data["name"]
-    arguments = json.loads(data["arguments"])
-
-    return FunctionCall(name, arguments)
-
-
-def _deserialize_message(data: dict) -> Message:
-    role = MessageRole.of(data["role"].upper())
-    content = data["content"]
-
-    match role:
-        case MessageRole.ASSISTANT:
-            function_call_data = data.get("function_call")
-            function_call = None
-            
-            if function_call_data is not None:
-                function_call = _deserialize_function_call(
-                    function_call_data
+                    Prompt: What is the first number in the following
+                    sequence? "a, b, c, d, e, f, g, h, i, j, k, l, m, n, ..."
+                    Type: ['integer', 'null']
+                    Answer: null
+                    """
                 )
+            },
+            {
+                "role": "user",
+                "content": dedent(
+                    f"""
+                    Prompt: {description}
+                    Type: {type}
+                    Answer:
+                    """
+                )
+            }
+        ],
+        model="gpt-4-1106-preview"
+    )
 
-            return Message.assistant(content, function_call)
-        case MessageRole.SYSTEM:
-            return Message.system(content)
-        case MessageRole.USER:
-            return Message.user(content)
-
-
-class OpenAiLanguageModel(LanguageModel):
-    def __init__(self, api_key: str, model_name: str) -> None:
-        self._api_key = api_key
-        self._model_name = model_name
-    
-    def supports_functions(self) -> bool:
-        return self._model_name in ("gpt-4-0613", "gpt-3.5-turbo-0613")
-
-    async def prompt(
-        self,
-        messages: Iterable[Message],
-        functions: Optional[Iterable[Function]] = None
-    ) -> AssistantMessage:
-        kwargs = {
-            "api_key": self._api_key,
-            "model": self._model_name,
-            "messages":  [_serialize_message(message) for message in messages]
-        }
-
-        if functions is not None:
-            kwargs["functions"] = [asdict(function) for function in functions]
-
-        response = await openai.ChatCompletion.acreate(**kwargs)
-
-        message_data = response["choices"][0]["message"]
-        message = _deserialize_message(message_data)
-
-        return message
+    return completion.choices[0].message.content
