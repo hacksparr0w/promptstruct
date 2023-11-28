@@ -110,5 +110,5 @@ async def _build_json_entity(
     raise UnsupportedJsonType(type)
 
 
-async def build_json(schema: dict, complete: Complete) -> Any:
+async def build_json(schema: Schema, complete: Complete) -> Any:
     return await _build_json_entity(schema, complete)
